@@ -1,0 +1,307 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <limits.h>
+
+struct Process {
+    int pid;
+    int burst_time;
+    int arrival_time;
+    int priority;
+    int remaining_time;
+    int turnaround_time;
+    int waiting_time;
+};
+
+void printGanttChart(int pid[], int start_time[], int end_time[], int n) {
+    printf("\nGantt Chart:\n");
+    for (int i = 0; i < n; i++) {
+        printf("| P%d ", pid[i]);
+    }
+    printf("|\n");
+    printf("0");
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < (end_time[i] - start_time[i]); j++) {
+            printf(" ");
+        }
+        printf("%2d", end_time[i]);
+    }
+    printf("\n");
+}
+
+void srtfNonPreemptive(struct Process processes[], int n) {
+    int total_time = 0;
+    int start_time[n], end_time[n], pid[n];
+    float total_turnaround_time = 0, total_waiting_time = 0;
+
+    for (int i = 0; i < n; i++) {
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    while (true) {
+        int shortest_process = -1;
+        int shortest_time = INT_MAX;
+
+        bool all_processes_complete = true;
+
+        for (int i = 0; i < n; i++) {
+            if (processes[i].remaining_time > 0 && processes[i].arrival_time <= total_time) {
+                all_processes_complete = false;
+
+                if (processes[i].remaining_time < shortest_time) {
+                    shortest_time = processes[i].remaining_time;
+                    shortest_process = i;
+                }
+            }
+        }
+
+        if (all_processes_complete)
+            break;
+
+        pid[total_time] = processes[shortest_process].pid;
+        start_time[total_time] = total_time;
+        total_time++;
+        processes[shortest_process].remaining_time--;
+
+        if (processes[shortest_process].remaining_time == 0) {
+            end_time[total_time - 1] = total_time;
+            processes[shortest_process].turnaround_time = total_time - processes[shortest_process].arrival_time;
+            processes[shortest_process].waiting_time = processes[shortest_process].turnaround_time - processes[shortest_process].burst_time;
+        }
+    }
+
+    printGanttChart(pid, start_time, end_time, total_time);
+
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", total_waiting_time / n);
+}
+
+void srtfPreemptive(struct Process processes[], int n) {
+    int total_time = 0;
+    int start_time[1000], end_time[1000], pid[1000];
+    float total_turnaround_time = 0, total_waiting_time = 0;
+
+    for (int i = 0; i < n; i++) {
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    while (true) {
+        int shortest_process = -1;
+        int shortest_time = INT_MAX;
+
+        bool all_processes_complete = true;
+
+        for (int i = 0; i < n; i++) {
+            if (processes[i].remaining_time > 0 && processes[i].arrival_time <= total_time) {
+                all_processes_complete = false;
+
+                if (processes[i].remaining_time < shortest_time) {
+                    shortest_time = processes[i].remaining_time;
+                    shortest_process = i;
+                }
+            }
+        }
+
+        if (all_processes_complete)
+            break;
+
+        pid[total_time] = processes[shortest_process].pid;
+        start_time[total_time] = total_time;
+        total_time++;
+        processes[shortest_process].remaining_time--;
+
+        if (processes[shortest_process].remaining_time == 0) {
+            end_time[total_time - 1] = total_time;
+            processes[shortest_process].turnaround_time = total_time - processes[shortest_process].arrival_time;
+            processes[shortest_process].waiting_time = processes[shortest_process].turnaround_time - processes[shortest_process].burst_time;
+        }
+    }
+
+    printGanttChart(pid, start_time, end_time, total_time);
+
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", total_waiting_time / n);
+}
+
+void priorityNonPreemptive(struct Process processes[], int n) {
+    int total_time = 0;
+    int start_time[n], end_time[n], pid[n];
+    float total_turnaround_time = 0, total_waiting_time = 0;
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (processes[i].priority > processes[j].priority) {
+                struct Process temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        pid[i] = processes[i].pid;
+        start_time[i] = total_time;
+        total_time += processes[i].burst_time;
+        end_time[i] = total_time;
+        processes[i].turnaround_time = total_time - processes[i].arrival_time;
+        processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+    }
+
+    printGanttChart(pid, start_time, end_time, n);
+
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", total_waiting_time / n);
+}
+
+void priorityPreemptive(struct Process processes[], int n) {
+    int total_time = 0;
+    int start_time[1000], end_time[1000], pid[1000];
+    float total_turnaround_time = 0, total_waiting_time = 0;
+
+    while (true) {
+        int highest_priority = -1;
+        int highest_priority_process = -1;
+        bool all_processes_complete = true;
+
+        for (int i = 0; i < n; i++) {
+            if (processes[i].remaining_time > 0 && processes[i].arrival_time <= total_time) {
+                all_processes_complete = false;
+
+                if (processes[i].priority > highest_priority) {
+                    highest_priority = processes[i].priority;
+                    highest_priority_process = i;
+                }
+            }
+        }
+
+        if (all_processes_complete)
+            break;
+
+        pid[total_time] = processes[highest_priority_process].pid;
+        start_time[total_time] = total_time;
+        total_time++;
+        processes[highest_priority_process].remaining_time--;
+
+        if (processes[highest_priority_process].remaining_time == 0) {
+            end_time[total_time - 1] = total_time;
+            processes[highest_priority_process].turnaround_time = total_time - processes[highest_priority_process].arrival_time;
+            processes[highest_priority_process].waiting_time = processes[highest_priority_process].turnaround_time - processes[highest_priority_process].burst_time;
+        }
+    }
+
+    printGanttChart(pid, start_time, end_time, total_time);
+
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", total_waiting_time / n);
+}
+
+void roundRobin(struct Process processes[], int n, int quantum) {
+    int total_time = 0;
+    int start_time[1000], end_time[1000], pid[1000];
+    float total_turnaround_time = 0, total_waiting_time = 0;
+
+    for (int i = 0; i < n; i++) {
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+    while (true) {
+        bool all_processes_complete = true;
+
+        for (int i = 0; i < n; i++) {
+            if (processes[i].remaining_time > 0) {
+                all_processes_complete = false;
+
+                if (processes[i].remaining_time > quantum) {
+                    pid[total_time] = processes[i].pid;
+                    start_time[total_time] = total_time;
+                    total_time += quantum;
+                    processes[i].remaining_time -= quantum;
+                    end_time[total_time - 1] = total_time;
+                } else {
+                    pid[total_time] = processes[i].pid;
+                    start_time[total_time] = total_time;
+                    total_time += processes[i].remaining_time;
+                    processes[i].remaining_time = 0;
+                    end_time[total_time - 1] = total_time;
+                    processes[i].turnaround_time = total_time - processes[i].arrival_time;
+                    processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+                }
+            }
+        }
+
+        if (all_processes_complete)
+            break;
+    }
+
+    printGanttChart(pid, start_time, end_time, total_time);
+
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+        total_waiting_time += processes[i].waiting_time;
+    }
+
+    printf("\nAverage Turnaround Time: %.2f\n", total_turnaround_time / n);
+    printf("Average Waiting Time: %.2f\n", total_waiting_time / n);
+}
+
+int main() {
+    int n, quantum;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process processes[n];
+
+    for (int i = 0; i < n; i++) {
+        printf("\nProcess %d\n", i + 1);
+        processes[i].pid = i + 1;
+
+        printf("Enter burst time: ");
+        scanf("%d", &processes[i].burst_time);
+
+        printf("Enter arrival time: ");
+        scanf("%d", &processes[i].arrival_time);
+
+        printf("Enter priority: ");
+        scanf("%d", &processes[i].priority);
+    }
+
+    printf("\n---- SRTF (Non-Preemptive) ----\n");
+    srtfNonPreemptive(processes, n);
+
+    printf("\n---- SRTF (Preemptive) ----\n");
+    srtfPreemptive(processes, n);
+
+    printf("\n---- Priority (Non-Preemptive) ----\n");
+    priorityNonPreemptive(processes, n);
+
+    printf("\n---- Priority (Preemptive) ----\n");
+    priorityPreemptive(processes, n);
+
+    printf("\nEnter the time quantum for Round Robin: ");
+    scanf("%d", &quantum);
+
+    printf("\n---- Round Robin ----\n");
+    roundRobin(processes, n, quantum);
+
+    return 0;
+}
