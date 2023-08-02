@@ -5,7 +5,7 @@ void readInput(int *nb, int *nf, int b[], int f[]);
 void bestFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[]);
 void worstFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[]);
 void firstFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[]);
-void displayResults(int nf, int f[], int ff[], int b[], int frag[]);
+void displayResults(int nf, int f[], int b[], int ff[]);
 int main()
 {
     int nb, nf, ch;
@@ -26,7 +26,7 @@ int main()
         default: printf("Inavlid choice\n");
                  break;
     }
-    displayResults(nf, f, ff, b, frag);
+    displayResults(nf, f, b,  ff);
     return 0;
 }
 
@@ -56,7 +56,7 @@ void readInput(int *nb, int *nf, int b[], int f[])
 
 void bestFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[])
 {
-    int i, j, temp, highest = 0;
+    int i, j, temp, lowest = 10000;
 
     for (i = 1; i <= nf; i++)
     {
@@ -67,17 +67,17 @@ void bestFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[])
                 temp = b[j] - f[i];
                 if (temp >= 0)
                 {
-                    if (highest == 0 || temp < highest)
+                    if(lowest > temp)
                     {
                         ff[i] = j;
-                        highest = temp;
+                        lowest = temp;
                     }
                 }
             }
         }
-        frag[i] = highest;
+        frag[i] = lowest;
         bf[ff[i]] = 1;
-        highest = 0;
+        lowest = 10000;
     }
 }
 
@@ -131,13 +131,13 @@ void firstFit(int nb, int nf, int b[], int f[], int bf[], int ff[], int frag[])
     }
 }
 
-void displayResults(int nf, int f[], int ff[], int b[], int frag[])
+void displayResults(int nf, int f[], int b[], int ff[])
 {
     int i;
 
-    printf("\nFile_no\t\tFile_size\tBlock_no\tBlock_size\tFragment");
+    printf("\nFile_no\t\tFile_size\tBlock_size");
     for (i = 1; i <= nf; i++)
     {
-        printf("\n%d\t\t%d\t\t%d\t\t%d\t\t%d", i, f[i], ff[i], b[ff[i]], frag[i]);
+        printf("\n%d\t\t%d\t\t%d", i, f[i], b[ff[i]]);
     }
 }
